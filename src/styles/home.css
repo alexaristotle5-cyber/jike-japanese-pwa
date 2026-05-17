@@ -1,0 +1,240 @@
+.home-screen::before {
+  z-index: -3;
+  background-image: var(--asset-home-bg);
+}
+
+.home-bg-video {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 650ms ease;
+  will-change: opacity;
+}
+
+.home-bg-video.is-active {
+  opacity: 1;
+}
+
+.home-panel {
+  height: 100%;
+  display: grid;
+  grid-template-rows: minmax(330px, 1fr) auto;
+  align-items: end;
+  justify-items: center;
+  gap: 16px;
+  padding: 26px 10px 16px;
+}
+
+.home-copy {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+}
+
+.home-copy h1 {
+  margin: 0;
+  font-size: clamp(34px, 12vw, 52px);
+  line-height: 1.05;
+  font-weight: 800;
+}
+
+.home-copy p {
+  margin: 0;
+  color: rgba(244, 251, 246, 0.8);
+  font-size: 14px;
+}
+
+.home-copy .home-kicker {
+  color: #bdeedd;
+  font-size: 13px;
+}
+
+.home-actions {
+  width: min(100%, 392px);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  gap: 6px;
+}
+
+.review-entry {
+  min-height: 50px;
+}
+
+.music-toggle {
+  min-width: 0;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid rgba(212, 238, 229, 0.28);
+  border-radius: 8px;
+  background: rgba(9, 26, 33, 0.62);
+  color: #f4fbf6;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 12px 22px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(8px);
+}
+
+.music-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #70848a;
+  box-shadow: 0 0 0 4px rgba(112, 132, 138, 0.16);
+}
+
+.music-toggle[aria-pressed="true"] .music-dot {
+  background: #8ff0c8;
+  box-shadow: 0 0 0 4px rgba(143, 240, 200, 0.18);
+}
+
+.settings-screen::before {
+  background-image: var(--asset-learning-bg);
+}
+
+.settings-panel {
+  height: calc(100% - 58px);
+  display: grid;
+  align-content: center;
+  gap: 24px;
+  padding: 8px;
+}
+
+.settings-logo {
+  width: 132px;
+  justify-self: center;
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.35));
+}
+
+.settings-list {
+  display: grid;
+  gap: 12px;
+}
+
+.settings-row {
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 22px;
+  border: 1px solid rgba(220, 242, 234, 0.22);
+  border-radius: 8px;
+  background: rgba(9, 27, 34, 0.7);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(9px);
+}
+
+.settings-row strong {
+  color: #bdeedd;
+}
+
+.settings-row--danger strong {
+  color: #ffc0b8;
+}
+
+.account-panel {
+  align-content: start;
+  padding-top: 24px;
+}
+
+.account-card {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid rgba(220, 242, 234, 0.22);
+  border-radius: 8px;
+  background: rgba(9, 27, 34, 0.72);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
+}
+
+.account-card h1 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.account-card p {
+  margin: 0;
+  color: rgba(244, 251, 246, 0.78);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.account-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.account-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.account-card dt {
+  color: #bdeedd;
+}
+
+.account-card dd {
+  margin: 0;
+  text-align: right;
+}
+
+.account-form {
+  display: grid;
+  gap: 10px;
+}
+
+.account-form input {
+  min-height: 48px;
+  width: 100%;
+  border: 1px solid rgba(220, 242, 234, 0.26);
+  border-radius: 8px;
+  padding: 0 14px;
+  background: rgba(3, 14, 20, 0.46);
+  color: #f4fbf6;
+  font: inherit;
+}
+
+.account-note {
+  color: #ffd9a8;
+}
+
+@media (max-height: 720px) {
+  .home-panel {
+    grid-template-rows: minmax(250px, 1fr) auto;
+    gap: 10px;
+    padding-top: 12px;
+  }
+
+  .home-copy h1 {
+    font-size: clamp(30px, 10vw, 44px);
+  }
+}
+
+@media (max-width: 360px) {
+  .home-actions {
+    gap: 4px;
+  }
+
+  .music-toggle {
+    font-size: 11px;
+  }
+}
