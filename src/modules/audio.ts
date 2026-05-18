@@ -4,9 +4,11 @@ import { getSettings, saveSettings } from "./storage";
 export class AudioController {
   private readonly backgroundAudio = new Audio(assetPath("assets/audio/background-music.mp3"));
   private currentSentenceAudio?: HTMLAudioElement;
+  private pendingUnlockCleanup?: () => void;
 
   constructor() {
     this.backgroundAudio.loop = true;
+    this.backgroundAudio.preload = "auto";
     this.backgroundAudio.volume = 0.38;
   }
 
@@ -14,20 +16,23 @@ export class AudioController {
     return getSettings().musicEnabled;
   }
 
-  async syncMusic(): Promise<void> {
+  async syncMusic(): Promise<boolean> {
     if (!this.isMusicEnabled()) {
-      this.backgroundAudio.pause();
-      return;
+      this.stopBackgroundMusic();
+      return false;
     }
 
+    return this.playBackgroundMusic();
+  }
+
+  private async playBackgroundMusic(): Promise<boolean> {
     try {
       await this.backgroundAudio.play();
+      this.clearUnlockRetry();
+      return true;
     } catch {
-      const settings = getSettings();
-      saveSettings({
-        ...settings,
-        musicEnabled: false,
-      });
+      this.installUnlockRetry();
+      return false;
     }
   }
 
@@ -38,8 +43,45 @@ export class AudioController {
       musicEnabled: nextEnabled,
     });
 
-    await this.syncMusic();
-    return this.isMusicEnabled();
+    if (!nextEnabled) {
+      this.stopBackgroundMusic();
+      return false;
+    }
+
+    await this.playBackgroundMusic();
+    return true;
+  }
+
+  private stopBackgroundMusic(): void {
+    this.clearUnlockRetry();
+    this.backgroundAudio.pause();
+  }
+
+  private installUnlockRetry(): void {
+    if (this.pendingUnlockCleanup) {
+      return;
+    }
+
+    const retry = (): void => {
+      this.clearUnlockRetry();
+      void this.syncMusic();
+    };
+    const options: AddEventListenerOptions = { capture: true };
+
+    window.addEventListener("pointerdown", retry, options);
+    window.addEventListener("keydown", retry, options);
+    window.addEventListener("touchstart", retry, options);
+
+    this.pendingUnlockCleanup = () => {
+      window.removeEventListener("pointerdown", retry, options);
+      window.removeEventListener("keydown", retry, options);
+      window.removeEventListener("touchstart", retry, options);
+    };
+  }
+
+  private clearUnlockRetry(): void {
+    this.pendingUnlockCleanup?.();
+    this.pendingUnlockCleanup = undefined;
   }
 
   async playSentence(src: string): Promise<void> {

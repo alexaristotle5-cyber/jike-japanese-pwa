@@ -39,12 +39,12 @@ export function createSettingsView(audio: AudioController): HTMLElement {
   });
 
   root.querySelector<HTMLButtonElement>('[data-action="music"]')?.addEventListener("click", async (event) => {
-    const enabled = await audio.toggleMusic();
     const target = event.currentTarget;
     if (!(target instanceof HTMLButtonElement)) {
       return;
     }
 
+    const enabled = await audio.toggleMusic();
     const status = target.querySelector("strong");
     if (status) {
       status.textContent = enabled ? "开" : "关";
