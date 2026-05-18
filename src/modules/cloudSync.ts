@@ -1,4 +1,5 @@
 import { sentences } from "../data/sentences";
+import { getDisplayNameForEmail, resolveFixedAccount } from "./fixedAccounts";
 import { getSupabaseClient, isSupabaseConfigured } from "./supabaseClient";
 import {
   exportLocalProgress,
@@ -345,7 +346,7 @@ export async function syncNow(): Promise<void> {
   setState({
     configured: true,
     status: "syncing",
-    userEmail: session.user.email,
+    userEmail: getDisplayNameForEmail(session.user.email),
     message: "正在同步",
   });
 
@@ -364,7 +365,7 @@ export async function syncNow(): Promise<void> {
     setState({
       configured: true,
       status: "synced",
-      userEmail: session.user.email,
+      userEmail: getDisplayNameForEmail(session.user.email),
       message: "已同步",
       pendingSync: false,
       lastSyncedAt: syncedAt,
@@ -376,7 +377,7 @@ export async function syncNow(): Promise<void> {
     setState({
       configured: true,
       status: "error",
-      userEmail: session.user.email,
+      userEmail: getDisplayNameForEmail(session.user.email),
       message,
       pendingSync: true,
       lastSyncError: message,
@@ -384,28 +385,34 @@ export async function syncNow(): Promise<void> {
   }
 }
 
-export async function signInWithEmail(email: string): Promise<void> {
+export async function signInWithFixedAccount(accountId: string, password: string): Promise<void> {
   const client = getSupabaseClient();
   if (!client) {
     throw new Error("尚未配置 Supabase URL 和 anon key");
   }
 
-  const result = await client.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: window.location.href.split("#")[0],
-    },
+  const account = resolveFixedAccount(accountId);
+  if (!account) {
+    throw new Error("账号不存在");
+  }
+
+  const result = await client.auth.signInWithPassword({
+    email: account.email,
+    password,
   });
 
   if (result.error) {
-    throw result.error;
+    throw new Error("账号或密码错误");
   }
 
   setState({
     configured: true,
-    status: "signed-out",
-    message: "登录邮件已发送",
+    status: "pending",
+    userEmail: account.label,
+    message: "登录成功，准备同步",
+    pendingSync: getSyncMeta().pendingSync,
   });
+  scheduleCloudSync(100);
 }
 
 export async function signOut(): Promise<void> {
@@ -463,7 +470,7 @@ export function initializeCloudSync(): void {
     setState({
       configured: true,
       status: user ? "pending" : "signed-out",
-      userEmail: user?.email,
+      userEmail: getDisplayNameForEmail(user?.email),
       message: user ? "等待同步" : "未登录",
       pendingSync: getSyncMeta().pendingSync,
       lastSyncedAt: getSyncMeta().lastSyncedAt,
@@ -490,7 +497,7 @@ export function initializeCloudSync(): void {
     setState({
       configured: true,
       status: "pending",
-      userEmail: user.email,
+      userEmail: getDisplayNameForEmail(user.email),
       message: "登录成功，准备同步",
     });
     scheduleCloudSync(100);

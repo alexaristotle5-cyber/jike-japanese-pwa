@@ -1,6 +1,6 @@
 import {
   getCloudSyncState,
-  signInWithEmail,
+  signInWithFixedAccount,
   signOut,
   subscribeCloudSyncState,
   syncNow,
@@ -74,9 +74,10 @@ export function createAccountView(): HTMLElement {
             state.configured
               ? `
                 <form class="account-form" data-action="login">
-                  <input name="email" type="email" inputmode="email" autocomplete="email" placeholder="邮箱地址" />
+                  <input name="account" type="text" inputmode="numeric" autocomplete="username" placeholder="账号" />
+                  <input name="password" type="password" autocomplete="current-password" placeholder="密码" />
                   <button class="settings-row" type="submit">
-                    <span>发送登录链接</span>
+                    <span>固定账号登录</span>
                     <strong>登录</strong>
                   </button>
                 </form>
@@ -109,22 +110,28 @@ export function createAccountView(): HTMLElement {
       }
 
       const formData = new FormData(form);
-      const email = String(formData.get("email") ?? "").trim();
-      if (!email) {
+      const account = String(formData.get("account") ?? "").trim();
+      const password = String(formData.get("password") ?? "");
+      if (!account || !password) {
+        renderState({
+          ...getCloudSyncState(),
+          status: "error",
+          message: "请输入账号和密码",
+        });
         return;
       }
 
       try {
-        await signInWithEmail(email);
+        await signInWithFixedAccount(account, password);
         renderState({
           ...getCloudSyncState(),
-          message: "登录邮件已发送，请在邮箱中确认",
+          message: "登录成功，正在同步",
         });
       } catch (error) {
         renderState({
           ...getCloudSyncState(),
           status: "error",
-          message: error instanceof Error ? error.message : "发送失败",
+          message: error instanceof Error ? error.message : "登录失败",
         });
       }
     });
