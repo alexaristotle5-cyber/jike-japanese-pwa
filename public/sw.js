@@ -1,4 +1,4 @@
-const CACHE_NAME = "shikoku-japanese-v10";
+const CACHE_NAME = "shikoku-japanese-v11";
 
 const scopePath = new URL(self.registration.scope).pathname.replace(/\/$/, "");
 const withBase = (path) => `${scopePath}${path}`;
@@ -59,6 +59,22 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.headers.has("range")) {
     event.respondWith(fetch(event.request));
+    return;
+  }
+
+  const acceptsHtml = event.request.headers.get("accept")?.includes("text/html");
+  if (event.request.mode === "navigate" || acceptsHtml) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(withBase("/index.html"), copy);
+          });
+          return response;
+        })
+        .catch(() => caches.match(withBase("/index.html"))),
+    );
     return;
   }
 

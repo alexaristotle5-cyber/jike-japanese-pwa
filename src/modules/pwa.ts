@@ -1,4 +1,4 @@
-const cacheName = "shikoku-japanese-v10";
+const cacheName = "shikoku-japanese-v11";
 const baseUrl = import.meta.env.BASE_URL;
 
 function appUrl(path = ""): string {
@@ -28,7 +28,10 @@ export function registerServiceWorker(): void {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register(appUrl("sw.js"), { scope: appUrl() })
-      .then(() => primeLoadedAssets())
+      .then((registration) => {
+        void registration.update();
+        return primeLoadedAssets();
+      })
       .catch(() => {
         // The app still works online if service worker registration is blocked.
       });
