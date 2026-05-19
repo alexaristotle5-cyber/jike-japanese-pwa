@@ -1,4 +1,4 @@
-const cacheName = "shikoku-japanese-v11";
+const cacheName = "shikoku-japanese-v12";
 const baseUrl = import.meta.env.BASE_URL;
 
 function appUrl(path = ""): string {

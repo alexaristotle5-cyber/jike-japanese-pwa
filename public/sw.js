@@ -1,4 +1,4 @@
-const CACHE_NAME = "shikoku-japanese-v11";
+const CACHE_NAME = "shikoku-japanese-v12";
 
 const scopePath = new URL(self.registration.scope).pathname.replace(/\/$/, "");
 const withBase = (path) => `${scopePath}${path}`;
