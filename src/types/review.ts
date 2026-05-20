@@ -29,6 +29,16 @@ export type SettingsState = {
 
 export type StudySessionKind = "learn" | "review";
 
+export type StudySelectionMode = "dice" | "random" | "sequential";
+
+export type ActiveStudySession = {
+  id: string;
+  title: string;
+  mode: StudySelectionMode;
+  sentenceIds: string[];
+  createdAt: string;
+};
+
 export type LearningState = {
   currentSentenceId?: string;
   currentUnit: string;

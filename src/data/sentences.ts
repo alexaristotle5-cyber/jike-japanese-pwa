@@ -1,5 +1,6 @@
 import type { SentenceStudyItem } from "../types/sentence";
 import { redbook0026To0100 } from "./redbook0026To0100";
+import { redbook0101To0200 } from "./redbook0101To0200";
 
 const baseSentences: SentenceStudyItem[] = [
   {
@@ -404,6 +405,6 @@ const baseSentences: SentenceStudyItem[] = [
   },
 ];
 
-export const sentences: SentenceStudyItem[] = [...baseSentences, ...redbook0026To0100];
+export const sentences: SentenceStudyItem[] = [...baseSentences, ...redbook0026To0100, ...redbook0101To0200];
 
 export const sentenceById = new Map(sentences.map((sentence) => [sentence.id, sentence]));

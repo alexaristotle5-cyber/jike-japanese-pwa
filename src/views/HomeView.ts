@@ -1,7 +1,6 @@
 import { sentences } from "../data/sentences";
 import type { AudioController } from "../modules/audio";
 import { assetPath } from "../modules/assets";
-import { requestIntroVideoOnNextStudy } from "../modules/companion";
 import { navigate } from "../modules/router";
 import { getDueCount, getLearnedCount } from "../modules/storage";
 
@@ -76,7 +75,7 @@ export function createHomeView(audio: AudioController): HTMLElement {
       </div>
       <div class="home-actions">
         <button class="image-button image-button--large" data-action="study">
-          <span>开始学习</span>
+          <span>游戏开始</span>
         </button>
         <button class="image-button image-button--large review-entry" data-action="review">
           <span>复习</span>
@@ -96,8 +95,7 @@ export function createHomeView(audio: AudioController): HTMLElement {
   setupSoftLoopVideo(root);
 
   root.querySelector<HTMLButtonElement>('[data-action="study"]')?.addEventListener("click", () => {
-    requestIntroVideoOnNextStudy();
-    navigate("study");
+    navigate("sentences");
   });
 
   root.querySelector<HTMLButtonElement>('[data-action="review"]')?.addEventListener("click", () => {
