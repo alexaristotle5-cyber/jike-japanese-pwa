@@ -494,6 +494,126 @@
   background: linear-gradient(180deg, #fff1b8, #f4bf55);
 }
 
+.sentence-hub-screen {
+  align-content: start;
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+  overflow: auto;
+}
+
+.sentence-hub-card {
+  display: grid;
+  gap: 12px;
+  margin: 18px 8px 14px;
+  padding: 22px 20px;
+  border: 1px solid rgba(222, 246, 239, 0.24);
+  border-radius: 8px;
+  background: rgba(8, 28, 35, 0.72);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 18px 28px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+}
+
+.sentence-hub-card h1 {
+  margin: 0;
+  font-size: clamp(30px, 9vw, 42px);
+  line-height: 1.1;
+}
+
+.sentence-hub-card p {
+  margin: 0;
+  color: rgba(244, 251, 246, 0.76);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.sentence-hub-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sentence-hub-stats span {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0 8px;
+  border: 1px solid rgba(189, 238, 221, 0.22);
+  border-radius: 8px;
+  background: rgba(4, 18, 24, 0.42);
+  color: #bdeedd;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.selection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 8px 24px;
+}
+
+.selection-card {
+  min-height: 156px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  border: 1px solid rgba(222, 246, 239, 0.26);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(36, 107, 116, 0.82), rgba(7, 35, 44, 0.88)),
+    rgba(7, 26, 34, 0.82);
+  color: #f8fff9;
+  text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 16px 24px rgba(0, 0, 0, 0.24);
+}
+
+.selection-card--dice {
+  background:
+    linear-gradient(180deg, rgba(218, 173, 86, 0.9), rgba(143, 78, 45, 0.88)),
+    rgba(54, 28, 19, 0.88);
+}
+
+.selection-card span {
+  min-width: 46px;
+  min-height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff7dc;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.selection-card .dice-face {
+  font-size: 34px;
+}
+
+.selection-card strong {
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", serif;
+  font-size: 22px;
+  line-height: 1.18;
+}
+
+.selection-card small {
+  color: rgba(244, 251, 246, 0.74);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.sentence-music-toggle {
+  min-width: 44px;
+  width: 44px;
+  min-height: 40px;
+}
+
 @media (max-height: 760px) {
   .training-card {
     height: 54svh;
@@ -556,5 +676,17 @@
     min-height: 30px;
     padding: 0 10px;
     font-size: 12px;
+  }
+
+  .selection-grid {
+    gap: 8px;
+  }
+
+  .selection-card {
+    min-height: 138px;
+  }
+
+  .sentence-hub-stats {
+    grid-template-columns: 1fr;
   }
 }

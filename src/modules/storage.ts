@@ -1,13 +1,14 @@
 import { sentences } from "../data/sentences";
-import type { LearningState, ReviewRecord, SettingsState } from "../types/review";
+import type { ActiveStudySession, LearningState, ReviewRecord, SettingsState, StudySelectionMode } from "../types/review";
 import type { LocalProgressSnapshot, SyncMeta } from "../types/sync";
 
 const REVIEW_KEY = "shikoku-japanese.reviewState";
 const SETTINGS_KEY = "shikoku-japanese.settings";
 const LEARNING_KEY = "shikoku-japanese.learningState";
 const SYNC_META_KEY = "shikoku-japanese.syncMeta";
+const ACTIVE_STUDY_SESSION_KEY = "shikoku-japanese.activeStudySession";
 
-const unitId = "n5-n4-0001-0100";
+const unitId = "n5-n4-0001-0200";
 const epochIso = "1970-01-01T00:00:00.000Z";
 
 const defaultSettings: SettingsState = {
@@ -135,6 +136,15 @@ export function getDueSentenceIds(now = new Date()): string[] {
 
       return new Date(record.nextReviewAt).getTime() <= nowTime;
     })
+    .sort((a, b) => {
+      const left = records[a.id];
+      const right = records[b.id];
+      if (left?.isHighRisk !== right?.isHighRisk) {
+        return left?.isHighRisk ? -1 : 1;
+      }
+
+      return new Date(left?.nextReviewAt ?? epochIso).getTime() - new Date(right?.nextReviewAt ?? epochIso).getTime();
+    })
     .map((sentence) => sentence.id);
 }
 
@@ -181,6 +191,44 @@ export function updateLearningStateAfterReview(sentenceId: string, reviewedAt: s
     totalLearned: getLearnedCount(),
     totalMastered: getMasteredCount(),
   });
+}
+
+export function startActiveStudySession(
+  sentenceIds: string[],
+  mode: StudySelectionMode,
+  title: string,
+): ActiveStudySession {
+  const now = nowIso();
+  const session: ActiveStudySession = {
+    id: `${mode}-${now}`,
+    title,
+    mode,
+    sentenceIds,
+    createdAt: now,
+  };
+
+  localStorage.setItem(ACTIVE_STUDY_SESSION_KEY, JSON.stringify(session));
+  saveLearningState({
+    ...getLearningState(),
+    currentUnit: unitId,
+    currentSentenceId: sentenceIds[0],
+    lastActiveAt: now,
+    updatedAt: now,
+  });
+  return session;
+}
+
+export function getActiveStudySession(): ActiveStudySession | null {
+  const session = parseJson<ActiveStudySession | null>(localStorage.getItem(ACTIVE_STUDY_SESSION_KEY), null);
+  if (!session || !Array.isArray(session.sentenceIds) || session.sentenceIds.length === 0) {
+    return null;
+  }
+
+  return session;
+}
+
+export function clearActiveStudySession(): void {
+  localStorage.removeItem(ACTIVE_STUDY_SESSION_KEY);
 }
 
 export function getSyncMeta(): SyncMeta {
@@ -236,6 +284,7 @@ export function importLocalProgress(snapshot: LocalProgressSnapshot, markPending
 export function clearProgress(): void {
   localStorage.removeItem(REVIEW_KEY);
   localStorage.removeItem(LEARNING_KEY);
+  localStorage.removeItem(ACTIVE_STUDY_SESSION_KEY);
   markPendingSync();
   dispatchLocalChange();
 }

@@ -1,17 +1,20 @@
 import { sentences } from "../data/sentences";
+import type { RewardVideo } from "../data/rewardVideos";
 import type { AudioController } from "../modules/audio";
 import { assetPath } from "../modules/assets";
 import {
   consumeIntroVideoRequest,
-  consumePendingReward,
+  getClaimableRewardCount,
   getCompanionState,
   markIntroVideoSeen,
+  markRewardVideoPlayed,
+  pickRandomRewardVideo,
   recordLearningAction,
   type CompanionState,
 } from "../modules/companion";
 import { navigate } from "../modules/router";
 import { rateSentence } from "../modules/reviewScheduler";
-import { getDueSentenceIds } from "../modules/storage";
+import { clearActiveStudySession, getActiveStudySession, getDueSentenceIds } from "../modules/storage";
 import type { SentenceStudyItem, StudyMode } from "../types/sentence";
 import type { Rating, StudySessionKind } from "../types/review";
 
@@ -29,13 +32,37 @@ function pickMode(): StudyMode {
   return Math.random() > 0.5 ? "visual-recall" : "listening-reverse";
 }
 
-function getQueue(kind: StudySessionKind): SentenceStudyItem[] {
+function getQueue(kind: StudySessionKind): { items: SentenceStudyItem[]; title: string; completionCopy: string } {
   if (kind === "review") {
     const dueIds = new Set(getDueSentenceIds());
-    return sentences.filter((sentence) => dueIds.has(sentence.id));
+    const dueItems = sentences.filter((sentence) => dueIds.has(sentence.id));
+    return {
+      items: dueItems,
+      title: "复习",
+      completionCopy: "今天到期的句子已经处理完。",
+    };
   }
 
-  return shuffle(sentences);
+  const activeSession = getActiveStudySession();
+  if (activeSession) {
+    const selected = activeSession.sentenceIds
+      .map((id) => sentences.find((sentence) => sentence.id === id))
+      .filter((sentence): sentence is SentenceStudyItem => Boolean(sentence));
+    if (selected.length > 0) {
+      return {
+        items: selected,
+        title: activeSession.title,
+        completionCopy: `${selected.length} 条句子已经完成一轮主动回忆。`,
+      };
+    }
+  }
+
+  const shuffled = shuffle(sentences);
+  return {
+    items: shuffled,
+    title: "学习",
+    completionCopy: `${shuffled.length} 条句子已经完成一轮主动回忆。`,
+  };
 }
 
 function renderList(items: string[]): string {
@@ -61,26 +88,22 @@ type CompanionDialog = {
   mode: "gift" | "player";
   autoplay: boolean;
   message?: string;
+  rewardVideo?: RewardVideo;
+  rewardConsumed?: boolean;
 };
 
-const companionVideos: Record<CompanionVideoKind, { title: string; src: string; playLabel: string }> = {
-  intro: {
-    title: "老师介绍",
-    src: assetPath("assets/videos/teacher-intro.mp4"),
-    playLabel: "播放介绍",
-  },
-  reward: {
-    title: "陪伴奖励",
-    src: assetPath("assets/videos/reward-001.mp4"),
-    playLabel: "播放奖励",
-  },
+const introVideo = {
+  title: "老师介绍",
+  src: assetPath("assets/videos/teacher-intro.mp4"),
+  playLabel: "播放介绍",
 };
 
 export function createStudyView(kind: StudySessionKind, audio: AudioController): HTMLElement {
   const root = document.createElement("main");
   root.className = "screen study-screen";
 
-  const queue = getQueue(kind);
+  const sessionQueue = getQueue(kind);
+  const queue = sessionQueue.items;
   let companionState: CompanionState = getCompanionState();
   let companionDialog: CompanionDialog | null = null;
   let index = 0;
@@ -108,6 +131,10 @@ export function createStudyView(kind: StudySessionKind, audio: AudioController):
   }
 
   function openRewardGift(): void {
+    if (getClaimableRewardCount(companionState) <= 0) {
+      return;
+    }
+
     companionDialog = {
       kind: "reward",
       mode: "gift",
@@ -117,11 +144,24 @@ export function createStudyView(kind: StudySessionKind, audio: AudioController):
   }
 
   function openRewardVideo(): void {
-    companionState = consumePendingReward();
+    const rewardVideo = pickRandomRewardVideo(companionState);
+    if (!rewardVideo) {
+      companionDialog = {
+        kind: "reward",
+        mode: "gift",
+        autoplay: false,
+        message: "现在没有可播放的新视频奖励。",
+      };
+      renderCard();
+      return;
+    }
+
     companionDialog = {
       kind: "reward",
       mode: "player",
       autoplay: true,
+      rewardVideo,
+      rewardConsumed: false,
     };
     renderCard();
   }
@@ -170,14 +210,14 @@ export function createStudyView(kind: StudySessionKind, audio: AudioController):
       return "";
     }
 
-    const pendingReward = companionState.pendingRewardCount > 0;
+    const claimableRewardCount = getClaimableRewardCount(companionState);
     return `
       <section class="companion-actions" aria-label="老师陪伴">
         <button class="teacher-video-button" data-action="teacher-video">老师介绍</button>
         ${
-          pendingReward
+          claimableRewardCount > 0
             ? `<button class="reward-chip" data-action="open-reward">领取奖励${
-                companionState.pendingRewardCount > 1 ? ` ${companionState.pendingRewardCount}` : ""
+                claimableRewardCount > 1 ? ` ${claimableRewardCount}` : ""
               }</button>`
             : ""
         }
@@ -191,6 +231,7 @@ export function createStudyView(kind: StudySessionKind, audio: AudioController):
     }
 
     if (companionDialog.mode === "gift") {
+      const claimableRewardCount = getClaimableRewardCount(companionState);
       return `
         <section class="companion-overlay" data-action="video-backdrop" role="dialog" aria-modal="true" aria-label="陪伴奖励">
           <div class="gift-dialog">
@@ -201,22 +242,35 @@ export function createStudyView(kind: StudySessionKind, audio: AudioController):
               <span class="gift-box__ribbon"></span>
             </div>
             <p class="gift-eyebrow">老师奖励</p>
-            <h2>新的陪伴礼盒</h2>
-            <p>你已经完成 10 次学习，点开礼盒领取老师准备的视频奖励。</p>
-            <button class="gift-play-button" data-action="open-reward-video">拆开礼盒</button>
+            <h2>${claimableRewardCount > 1 ? `新的陪伴礼盒 × ${claimableRewardCount}` : "新的陪伴礼盒"}</h2>
+            <p>${companionDialog.message ?? "每完成 10 次学习，就会多一个随机视频奖励。"}</p>
+            <button class="gift-play-button" data-action="open-reward-video">立即播放</button>
             <button class="video-secondary-button" data-action="close-video">稍后领取</button>
           </div>
         </section>
       `;
     }
 
-    const video = companionVideos[companionDialog.kind];
+    const video =
+      companionDialog.kind === "intro"
+        ? introVideo
+        : companionDialog.rewardVideo
+          ? {
+              title: companionDialog.rewardVideo.title,
+              src: assetPath(companionDialog.rewardVideo.src),
+              playLabel: "播放奖励",
+            }
+          : null;
+    if (!video) {
+      return "";
+    }
+
     return `
       <section class="companion-overlay" data-action="video-backdrop" role="dialog" aria-modal="true" aria-label="${video.title}">
         <div class="video-dialog">
           <button class="video-close-button" data-action="close-video" aria-label="关闭">×</button>
           <div class="video-dialog__title">
-            <span>老师陪伴</span>
+            <span>${companionDialog.kind === "intro" ? "老师陪伴" : "视频奖励"}</span>
             <strong>${video.title}</strong>
           </div>
           <video data-companion-video src="${video.src}" playsinline controls preload="metadata"></video>
@@ -262,6 +316,14 @@ export function createStudyView(kind: StudySessionKind, audio: AudioController):
       if (companionDialog?.kind === "intro" && !companionState.introVideoSeen) {
         companionState = markIntroVideoSeen();
       }
+      if (
+        companionDialog?.kind === "reward" &&
+        companionDialog.rewardVideo &&
+        !companionDialog.rewardConsumed
+      ) {
+        companionState = markRewardVideoPlayed(companionDialog.rewardVideo.id);
+        companionDialog.rewardConsumed = true;
+      }
     });
     video?.addEventListener("ended", () => {
       companionDialog = null;
@@ -302,8 +364,10 @@ export function createStudyView(kind: StudySessionKind, audio: AudioController):
 
   function renderComplete(): void {
     const title = kind === "review" ? "复习完成" : "本轮学习完成";
-    const copy =
-      kind === "review" ? "今天到期的句子已经处理完。" : `${sentences.length} 条句子已经完成一轮主动回忆。`;
+    const copy = sessionQueue.completionCopy;
+    if (kind === "learn") {
+      clearActiveStudySession();
+    }
 
     root.innerHTML = `
       <header class="top-bar">
@@ -336,7 +400,7 @@ export function createStudyView(kind: StudySessionKind, audio: AudioController):
     const item = queue[index];
     const isListening = mode === "listening-reverse";
     const progressLabel = `${index + 1} / ${queue.length}`;
-    const title = kind === "review" ? "复习" : "学习";
+    const title = kind === "review" ? "复习" : sessionQueue.title;
     const sentenceContent = sentenceVisible
       ? `
           <p class="sentence-jp">${item.jpSentence}</p>

@@ -9,6 +9,7 @@ import { getRoute, onRouteChange } from "./modules/router";
 import { registerServiceWorker } from "./modules/pwa";
 import { createAccountView } from "./views/AccountView";
 import { createHomeView } from "./views/HomeView";
+import { createSentenceRecitationView } from "./views/SentenceRecitationView";
 import { createSettingsView } from "./views/SettingsView";
 import { createStudyView } from "./views/StudyView";
 
@@ -30,6 +31,8 @@ function render(): void {
 
   if (route === "study") {
     appRoot.append(createStudyView("learn", audioController));
+  } else if (route === "sentences") {
+    appRoot.append(createSentenceRecitationView(audioController));
   } else if (route === "review") {
     appRoot.append(createStudyView("review", audioController));
   } else if (route === "settings") {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "shikoku-japanese-v14";
+const CACHE_NAME = "shikoku-japanese-v16";
 
 const scopePath = new URL(self.registration.scope).pathname.replace(/\/$/, "");
 const withBase = (path) => `${scopePath}${path}`;
@@ -15,7 +15,10 @@ const CORE_ASSETS = [
   withBase("/assets/backgrounds/learning-bg.png"),
   withBase("/assets/audio/background-music.mp3"),
   withBase("/assets/videos/teacher-intro.mp4"),
-  withBase("/assets/videos/reward-001.mp4"),
+  ...Array.from({ length: 20 }, (_, index) => {
+    const id = String(index + 1).padStart(3, "0");
+    return withBase(`/assets/videos/rewards/reward-${id}.mp4`);
+  }),
   withBase("/assets/panels/training-card.png"),
   withBase("/assets/panels/analysis-panel.png"),
   withBase("/assets/panels/hint-panel.png"),
@@ -30,7 +33,7 @@ const CORE_ASSETS = [
   withBase("/assets/icons/show-sentence.png"),
   withBase("/assets/icons/show-meaning.png"),
   withBase("/assets/icons/listening-center.png"),
-  ...Array.from({ length: 100 }, (_, index) => {
+  ...Array.from({ length: 200 }, (_, index) => {
     const id = String(index + 1).padStart(4, "0");
     return withBase(`/assets/audio/sentences/${id}.wav`);
   }),
