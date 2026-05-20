@@ -1,6 +1,7 @@
 import type { SentenceStudyItem } from "../types/sentence";
+import { redbook0026To0100 } from "./redbook0026To0100";
 
-export const sentences: SentenceStudyItem[] = [
+const baseSentences: SentenceStudyItem[] = [
   {
     id: "0001",
     targetWord: "あ",
@@ -402,5 +403,7 @@ export const sentences: SentenceStudyItem[] = [
     grammarNotes: ["时间名词放句首提示发生时间。", "する动词：名词 + する 构成动作。"],
   },
 ];
+
+export const sentences: SentenceStudyItem[] = [...baseSentences, ...redbook0026To0100];
 
 export const sentenceById = new Map(sentences.map((sentence) => [sentence.id, sentence]));

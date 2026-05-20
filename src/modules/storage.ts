@@ -7,7 +7,7 @@ const SETTINGS_KEY = "shikoku-japanese.settings";
 const LEARNING_KEY = "shikoku-japanese.learningState";
 const SYNC_META_KEY = "shikoku-japanese.syncMeta";
 
-const unitId = "n5-n4-0001-0025";
+const unitId = "n5-n4-0001-0100";
 const epochIso = "1970-01-01T00:00:00.000Z";
 
 const defaultSettings: SettingsState = {

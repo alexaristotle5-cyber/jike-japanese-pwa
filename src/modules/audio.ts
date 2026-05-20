@@ -57,6 +57,16 @@ export class AudioController {
     this.backgroundAudio.pause();
   }
 
+  pauseBackgroundForMedia(): void {
+    this.backgroundAudio.pause();
+  }
+
+  resumeBackgroundAfterMedia(): void {
+    if (this.isMusicEnabled()) {
+      void this.syncMusic();
+    }
+  }
+
   private installUnlockRetry(): void {
     if (this.pendingUnlockCleanup) {
       return;

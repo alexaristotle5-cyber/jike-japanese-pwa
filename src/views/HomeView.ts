@@ -1,6 +1,7 @@
 import { sentences } from "../data/sentences";
 import type { AudioController } from "../modules/audio";
 import { assetPath } from "../modules/assets";
+import { requestIntroVideoOnNextStudy } from "../modules/companion";
 import { navigate } from "../modules/router";
 import { getDueCount, getLearnedCount } from "../modules/storage";
 
@@ -95,6 +96,7 @@ export function createHomeView(audio: AudioController): HTMLElement {
   setupSoftLoopVideo(root);
 
   root.querySelector<HTMLButtonElement>('[data-action="study"]')?.addEventListener("click", () => {
+    requestIntroVideoOnNextStudy();
     navigate("study");
   });
 
